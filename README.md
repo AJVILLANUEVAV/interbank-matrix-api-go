@@ -18,6 +18,10 @@ go test ./...
 
 Endpoint principal: `POST /v1/matrices/qr` con `{ "matrix": [[1, 2], [3, 4]] }`.
 
+## API-first
+
+El contrato OpenAPI está en `openapi/openapi.yaml`. Puedes importarlo en [Swagger Editor](https://editor.swagger.io/) o visualizarlo con cualquier herramienta compatible con OpenAPI 3.
+
 ## Variables de entorno
 
 - `PORT`: puerto HTTP, por defecto `8080`.

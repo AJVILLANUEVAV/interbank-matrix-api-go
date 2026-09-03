@@ -1,9 +1,11 @@
 package adapters
 
 import (
+	"errors"
 	"os"
 
 	"github.com/AJVILLANUEVAV/interbank-matrix-api-go/internal/application"
+	"github.com/AJVILLANUEVAV/interbank-matrix-api-go/internal/ports"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -35,6 +37,9 @@ func (handler *MatrixHTTPHandler) processMatrix(c *fiber.Ctx) error {
 	}
 	result, err := handler.process.Execute(request.Matrix)
 	if err != nil {
+		if errors.Is(err, ports.ErrStatisticsUnavailable) {
+			return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{"error": err.Error()})
+		}
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(result)

@@ -1,5 +1,9 @@
 package ports
 
+import "errors"
+
+var ErrStatisticsUnavailable = errors.New("statistics service unavailable")
+
 type MatrixResult struct {
 	RotatedMatrix [][]float64    `json:"rotatedMatrix"`
 	Q             [][]float64    `json:"q"`

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/AJVILLANUEVAV/interbank-matrix-api-go/internal/ports"
 )
 
 type StatisticsHTTPClient struct {
@@ -30,11 +32,11 @@ func (client *StatisticsHTTPClient) Calculate(rotated, q, r [][]float64) (map[st
 	request.Header.Set("Content-Type", "application/json")
 	response, err := client.client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ports.ErrStatisticsUnavailable, err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode >= http.StatusBadRequest {
-		return nil, fmt.Errorf("statistics service returned status %d", response.StatusCode)
+		return nil, fmt.Errorf("%w: returned status %d", ports.ErrStatisticsUnavailable, response.StatusCode)
 	}
 	var result struct {
 		Statistics map[string]any `json:"statistics"`

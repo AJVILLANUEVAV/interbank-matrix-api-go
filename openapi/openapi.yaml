@@ -1,0 +1,99 @@
+openapi: 3.0.3
+info:
+  title: Interbank Matrix API
+  version: 1.0.0
+  description: Rotates a rectangular matrix, calculates QR factorization, and retrieves statistics from the Statistics API.
+servers:
+  - url: http://localhost:8080
+    description: Local Docker Compose
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getMatrixHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /v1/matrices/qr:
+    post:
+      summary: Rotate and factorize a matrix
+      operationId: processMatrix
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatrixRequest'
+            example:
+              matrix: [[1, 2, 3], [4, 5, 6]]
+      responses:
+        '200':
+          description: Rotated matrix, QR factors, and statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatrixResponse'
+        '400':
+          description: Invalid JSON or non-rectangular matrix
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Statistics API unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    Matrix:
+      type: array
+      minItems: 1
+      items:
+        type: array
+        minItems: 1
+        items:
+          type: number
+          format: double
+    MatrixRequest:
+      type: object
+      required: [matrix]
+      properties:
+        matrix:
+          $ref: '#/components/schemas/Matrix'
+    Statistics:
+      type: object
+      required: [min, max, average, sum, isDiagonal]
+      properties:
+        min: { type: number, format: double }
+        max: { type: number, format: double }
+        average: { type: number, format: double }
+        sum: { type: number, format: double }
+        isDiagonal: { type: boolean }
+    MatrixStatistics:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Statistics'
+    MatrixResponse:
+      type: object
+      required: [rotatedMatrix, q, r, statistics]
+      properties:
+        rotatedMatrix: { $ref: '#/components/schemas/Matrix' }
+        q: { $ref: '#/components/schemas/Matrix' }
+        r: { $ref: '#/components/schemas/Matrix' }
+        statistics: { $ref: '#/components/schemas/MatrixStatistics' }
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, example: ok }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
