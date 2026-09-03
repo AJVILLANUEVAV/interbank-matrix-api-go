@@ -2,9 +2,21 @@
 
 API REST de matrices con Go y Fiber. Valida matrices rectangulares, aplica rotación de 90 grados y calcula factorización QR.
 
-## Estado
+La estructura sigue arquitectura hexagonal: `internal/matrix` contiene el dominio matemático, `internal/application` el caso de uso, `internal/ports` los contratos y `internal/adapters` los adaptadores HTTP.
 
-Scaffold inicial. La implementación, pruebas y Dockerfile se agregarán en el siguiente paso.
+## Ejecutar localmente
+
+```bash
+go run ./cmd/api
+```
+
+Pruebas:
+
+```bash
+go test ./...
+```
+
+Endpoint principal: `POST /v1/matrices/qr` con `{ "matrix": [[1, 2], [3, 4]] }`.
 
 ## Variables de entorno
 
