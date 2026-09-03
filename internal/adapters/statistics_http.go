@@ -9,15 +9,17 @@ import (
 	"time"
 
 	"github.com/AJVILLANUEVAV/interbank-matrix-api-go/internal/ports"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type StatisticsHTTPClient struct {
-	baseURL string
-	client  *http.Client
+	baseURL   string
+	jwtSecret string
+	client    *http.Client
 }
 
-func NewStatisticsHTTPClient(baseURL string) *StatisticsHTTPClient {
-	return &StatisticsHTTPClient{baseURL: baseURL, client: &http.Client{Timeout: 5 * time.Second}}
+func NewStatisticsHTTPClient(baseURL, jwtSecret string) *StatisticsHTTPClient {
+	return &StatisticsHTTPClient{baseURL: baseURL, jwtSecret: jwtSecret, client: &http.Client{Timeout: 5 * time.Second}}
 }
 
 func (client *StatisticsHTTPClient) Calculate(rotated, q, r [][]float64) (map[string]any, error) {
@@ -30,6 +32,14 @@ func (client *StatisticsHTTPClient) Calculate(rotated, q, r [][]float64) (map[st
 		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/json")
+	if client.jwtSecret != "" {
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": "matrix-api", "role": "service", "exp": time.Now().Add(5 * time.Minute).Unix()})
+		signedToken, err := token.SignedString([]byte(client.jwtSecret))
+		if err != nil {
+			return nil, err
+		}
+		request.Header.Set("Authorization", "Bearer "+signedToken)
+	}
 	response, err := client.client.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ports.ErrStatisticsUnavailable, err)

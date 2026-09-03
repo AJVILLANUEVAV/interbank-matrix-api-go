@@ -27,3 +27,5 @@ El contrato OpenAPI está en `openapi/openapi.yaml`. Puedes importarlo en [Swagg
 - `PORT`: puerto HTTP, por defecto `8080`.
 - `STATISTICS_API_URL`: URL de la API de estadísticas.
 - `JWT_SECRET`: secreto JWT, requerido cuando se habilita autenticación.
+
+Cuando `JWT_SECRET` está configurado, `POST /v1/matrices/qr` requiere `Authorization: Bearer <token>`. Matrix API firma un token de servicio separado para llamar a Statistics API.

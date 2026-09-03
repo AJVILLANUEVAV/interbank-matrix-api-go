@@ -15,17 +15,21 @@ type matrixRequest struct {
 }
 
 type MatrixHTTPHandler struct {
-	process *application.ProcessMatrix
+	process   *application.ProcessMatrix
+	jwtSecret string
 }
 
-func NewMatrixHTTPHandler(process *application.ProcessMatrix) *MatrixHTTPHandler {
-	return &MatrixHTTPHandler{process: process}
+func NewMatrixHTTPHandler(process *application.ProcessMatrix, jwtSecret string) *MatrixHTTPHandler {
+	return &MatrixHTTPHandler{process: process, jwtSecret: jwtSecret}
 }
 
 func (handler *MatrixHTTPHandler) App() *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:5173,http://localhost:3000"}))
 	app.Get("/health", func(c *fiber.Ctx) error { return c.JSON(fiber.Map{"status": "ok"}) })
+	if handler.jwtSecret != "" {
+		app.Use("/v1", JWTMiddleware(handler.jwtSecret))
+	}
 	app.Post("/v1/matrices/qr", handler.processMatrix)
 	return app
 }
@@ -50,4 +54,8 @@ func StatisticsURL() string {
 		return url
 	}
 	return "http://localhost:8081"
+}
+
+func JWTSecret() string {
+	return os.Getenv("JWT_SECRET")
 }

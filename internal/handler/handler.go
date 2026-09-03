@@ -6,8 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewApp(statisticsURL string) *fiber.App {
-	statisticsClient := adapters.NewStatisticsHTTPClient(statisticsURL)
+func NewApp(statisticsURL, jwtSecret string) *fiber.App {
+	statisticsClient := adapters.NewStatisticsHTTPClient(statisticsURL, jwtSecret)
 	processMatrix := application.NewProcessMatrix(statisticsClient)
-	return adapters.NewMatrixHTTPHandler(processMatrix).App()
+	return adapters.NewMatrixHTTPHandler(processMatrix, jwtSecret).App()
 }
