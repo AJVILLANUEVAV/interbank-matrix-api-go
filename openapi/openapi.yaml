@@ -22,6 +22,8 @@ paths:
     post:
       summary: Rotate and factorize a matrix
       operationId: processMatrix
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -50,6 +52,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     Matrix:
       type: array

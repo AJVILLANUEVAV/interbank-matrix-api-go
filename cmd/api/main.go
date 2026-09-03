@@ -13,6 +13,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	app := handler.NewApp(adapters.StatisticsURL())
+	app := handler.NewApp(adapters.StatisticsURL(), adapters.JWTSecret())
 	log.Fatal(app.Listen(":" + port))
 }
