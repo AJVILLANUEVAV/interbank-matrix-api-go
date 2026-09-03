@@ -25,7 +25,7 @@ func NewMatrixHTTPHandler(process *application.ProcessMatrix, jwtSecret string) 
 
 func (handler *MatrixHTTPHandler) App() *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
-	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:5173,http://localhost:3000"}))
+	app.Use(cors.New(cors.Config{AllowOrigins: WebOrigin()}))
 	app.Get("/health", func(c *fiber.Ctx) error { return c.JSON(fiber.Map{"status": "ok"}) })
 	if handler.jwtSecret != "" {
 		app.Use("/v1", JWTMiddleware(handler.jwtSecret))
@@ -58,4 +58,11 @@ func StatisticsURL() string {
 
 func JWTSecret() string {
 	return os.Getenv("JWT_SECRET")
+}
+
+func WebOrigin() string {
+	if origin := os.Getenv("WEB_ORIGIN"); origin != "" {
+		return "http://localhost:5173,http://localhost:3000," + origin
+	}
+	return "http://localhost:5173,http://localhost:3000"
 }
