@@ -19,13 +19,16 @@ type StatisticsHTTPClient struct {
 }
 
 func NewStatisticsHTTPClient(baseURL, jwtSecret string) *StatisticsHTTPClient {
-	return &StatisticsHTTPClient{baseURL: baseURL, jwtSecret: jwtSecret, client: &http.Client{Timeout: 30 * time.Second}}
+	return &StatisticsHTTPClient{baseURL: baseURL, jwtSecret: jwtSecret, client: &http.Client{Timeout: 60 * time.Second}}
 }
 
 func (client *StatisticsHTTPClient) Calculate(rotated, q, r [][]float64) (map[string]any, error) {
 	payload, err := json.Marshal(map[string]any{"matrices": map[string]any{"rotatedMatrix": rotated, "q": q, "r": r}})
 	if err != nil {
 		return nil, err
+	}
+	if err := client.warmUp(); err != nil {
+		return nil, fmt.Errorf("%w: warm-up failed: %v", ports.ErrStatisticsUnavailable, err)
 	}
 	for attempt := 1; attempt <= 3; attempt++ {
 		request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, client.baseURL+"/internal/v1/statistics", bytes.NewReader(payload))
@@ -77,4 +80,29 @@ func (client *StatisticsHTTPClient) Calculate(rotated, q, r [][]float64) (map[st
 		return result.Statistics, nil
 	}
 	return nil, fmt.Errorf("%w: exhausted retries", ports.ErrStatisticsUnavailable)
+}
+
+func (client *StatisticsHTTPClient) warmUp() error {
+	for attempt := 1; attempt <= 3; attempt++ {
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, client.baseURL+"/health", nil)
+		if err != nil {
+			return err
+		}
+		response, err := client.client.Do(request)
+		if err == nil {
+			response.Body.Close()
+			if response.StatusCode < http.StatusBadRequest {
+				return nil
+			}
+		}
+		if attempt < 3 {
+			time.Sleep(time.Duration(attempt) * time.Second)
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("health returned status %d", response.StatusCode)
+	}
+	return fmt.Errorf("health warm-up exhausted retries")
 }
