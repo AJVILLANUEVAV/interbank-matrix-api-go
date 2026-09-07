@@ -46,6 +46,13 @@ func (client *StatisticsHTTPClient) Calculate(rotated, q, r [][]float64) (map[st
 	}
 	defer response.Body.Close()
 	if response.StatusCode >= http.StatusBadRequest {
+		var errorBody struct {
+			Error string `json:"error"`
+		}
+		_ = json.NewDecoder(response.Body).Decode(&errorBody)
+		if errorBody.Error != "" {
+			return nil, fmt.Errorf("%w: returned status %d (%s)", ports.ErrStatisticsUnavailable, response.StatusCode, errorBody.Error)
+		}
 		return nil, fmt.Errorf("%w: returned status %d", ports.ErrStatisticsUnavailable, response.StatusCode)
 	}
 	var result struct {
